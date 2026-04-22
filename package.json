@@ -13,6 +13,7 @@
     "@anthropic-ai/sdk": "^0.90.0",
     "@supabase/supabase-js": "^2.104.0",
     "@tailwindcss/vite": "^4.2.4",
+    "groq-sdk": "^1.1.2",
     "lucide-react": "^1.8.0",
     "react": "^19.2.5",
     "react-dom": "^19.2.5",

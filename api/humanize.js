@@ -6,30 +6,27 @@
 // Payload: { "text": "..." }
 // Returns: { "success": true, "result": "..." }
 //
-// Dependencies (add to package.json):
-//   @anthropic-ai/sdk    — Claude API client
-//   @supabase/supabase-js — Postgres client via Supabase
+// Provider: Groq (free tier) — Meta Llama 3.1 70B
+// DB:       Supabase Postgres (generations table)
 // =============================================================================
 
-import Anthropic from "@anthropic-ai/sdk";
+import Groq from "groq-sdk";
 import { createClient } from "@supabase/supabase-js";
 
 // ---------------------------------------------------------------------------
 // 1. CLIENT INITIALISATION
-//    Anthropic is safe to create at module scope (handles undefined key
-//    gracefully until a request is made).
-//    Supabase is created INSIDE the handler so a missing SUPABASE_URL env var
-//    never crashes the module before it can return a proper JSON error.
+//    Groq client is safe at module scope — it won't throw if the key is
+//    undefined until an actual API call is made.
+//    Supabase is lazy-initialised inside the handler so a missing URL env
+//    var never causes a module-level crash.
 // ---------------------------------------------------------------------------
 
-const anthropic = new Anthropic({
-  apiKey: process.env.ANTHROPIC_API_KEY,
+const groq = new Groq({
+  apiKey: process.env.GROQ_API_KEY,
 });
 
 // ---------------------------------------------------------------------------
 // 2. SYSTEM PROMPT — The Core Humanization Engine
-//    This prompt is the most critical piece of the whole application.
-//    Each instruction directly targets a detectable AI-writing pattern.
 // ---------------------------------------------------------------------------
 
 const HUMANIZE_SYSTEM_PROMPT = `You are an expert ghostwriter who rewrites AI-generated text so that it reads as authentically human-written prose. Your output must pass AI-detection tools such as GPTZero and Originality.ai.
@@ -44,7 +41,7 @@ BURSTINESS — Sentence Length Variation
 PERPLEXITY — Vocabulary & Unpredictability
 - Replace predictable, high-frequency algorithmic word choices with natural, slightly unconventional alternatives.
 - Use specific, concrete nouns and active verbs instead of abstract generalisations.
-- Vary your sentence openers: do not start more than two sentences in a row with the same grammatical structure (e.g. subject + verb).
+- Vary your sentence openers: do not start more than two sentences in a row with the same grammatical structure.
 - Include natural discourse markers: "In fact,", "Still,", "That said,", "Here's the thing —", used sparingly.
 
 BANNED WORDS — Strip Every Instance
@@ -59,15 +56,15 @@ TONE & MEANING PRESERVATION
 
 OUTPUT FORMAT
 - Return ONLY the rewritten text.
-- Do not include any preamble, explanation, metadata, or conversational filler.
+- Do not include any preamble, explanation, or conversational filler.
 - Do not say "Here is the rewritten version" or anything similar.
 - Do not wrap the output in quotes or markdown code blocks.`;
 
 // ---------------------------------------------------------------------------
-// 3. INPUT VALIDATION HELPERS
+// 3. INPUT VALIDATION
 // ---------------------------------------------------------------------------
 
-const MAX_INPUT_CHARS = 10_000; // ~7 500 tokens — safely within Claude's context
+const MAX_INPUT_CHARS = 10_000;
 
 function validatePayload(body) {
   if (!body || typeof body !== "object") {
@@ -79,12 +76,11 @@ function validatePayload(body) {
   if (body.text.length > MAX_INPUT_CHARS) {
     return `Input text exceeds the maximum allowed length of ${MAX_INPUT_CHARS} characters.`;
   }
-  return null; // null == valid
+  return null;
 }
 
 // ---------------------------------------------------------------------------
 // 4. DATABASE LOGGING
-//    Accepts the supabase client as a parameter (created inside handler).
 //    Swallows errors — a DB failure never degrades the user response.
 // ---------------------------------------------------------------------------
 
@@ -108,19 +104,14 @@ async function logToDatabase(supabase, originalText, humanizedText) {
 }
 
 // ---------------------------------------------------------------------------
-// 5. MAIN HANDLER — Vercel Serverless Function Entry Point
+// 5. MAIN HANDLER
 // ---------------------------------------------------------------------------
 
 export default async function handler(req, res) {
 
   // ── 5a. Environment Variable Guard ───────────────────────────────────────
-  // Validate required env vars FIRST so a misconfigured deployment returns
-  // a clear JSON error instead of an unhandled module-level crash.
-  const missingVars = [
-    "ANTHROPIC_API_KEY",
-    "SUPABASE_URL",
-    "SUPABASE_SERVICE_ROLE_KEY",
-  ].filter((k) => !process.env[k]);
+  const missingVars = ["GROQ_API_KEY", "SUPABASE_URL", "SUPABASE_SERVICE_ROLE_KEY"]
+    .filter((k) => !process.env[k]);
 
   if (missingVars.length > 0) {
     console.error("[Config] Missing environment variables:", missingVars);
@@ -131,8 +122,6 @@ export default async function handler(req, res) {
   }
 
   // ── 5b. Lazy Supabase Client ──────────────────────────────────────────────
-  // Created here (not at module scope) so a missing URL never crashes the
-  // module before we can return a proper JSON error response.
   const supabase = createClient(
     process.env.SUPABASE_URL,
     process.env.SUPABASE_SERVICE_ROLE_KEY,
@@ -141,10 +130,7 @@ export default async function handler(req, res) {
   // ── 5c. Method Guard ─────────────────────────────────────────────────────
   if (req.method !== "POST") {
     res.setHeader("Allow", "POST");
-    return res.status(405).json({
-      success: false,
-      error:   "Method Not Allowed. Use POST.",
-    });
+    return res.status(405).json({ success: false, error: "Method Not Allowed. Use POST." });
   }
 
   // ── 5d. CORS Headers ─────────────────────────────────────────────────────
@@ -152,55 +138,51 @@ export default async function handler(req, res) {
   res.setHeader("Access-Control-Allow-Methods", "POST, OPTIONS");
   res.setHeader("Access-Control-Allow-Headers", "Content-Type");
 
-  if (req.method === "OPTIONS") {
-    return res.status(204).end();
-  }
+  if (req.method === "OPTIONS") return res.status(204).end();
 
-  // ── 5h. Input Validation ─────────────────────────────────────────────────
+  // ── 5e. Input Validation ─────────────────────────────────────────────────
   const validationError = validatePayload(req.body);
   if (validationError) {
-    return res.status(400).json({
-      success: false,
-      error:   validationError,
-    });
+    return res.status(400).json({ success: false, error: validationError });
   }
 
   const originalText = req.body.text.trim();
 
-  // ── 5i. Claude API Call ───────────────────────────────────────────────────
+  // ── 5f. Groq / Llama API Call ─────────────────────────────────────────────
   let humanizedText;
 
   try {
-    console.log(`[Anthropic] Sending ${originalText.length} chars to Claude...`);
+    console.log(`[Groq] Sending ${originalText.length} chars to Llama 3.1 70B...`);
 
-    const message = await anthropic.messages.create({
-      model:      "claude-3-5-sonnet-20240620",
+    const completion = await groq.chat.completions.create({
+      model:       "llama-3.1-70b-versatile", // free on Groq; swap to llama-3.1-8b-instant for lower latency
       max_tokens:  4096,
-      system:      HUMANIZE_SYSTEM_PROMPT,
-      messages: [{ role: "user", content: originalText }],
+      temperature: 0.85, // slightly higher than default → more varied, natural-feeling output
+      messages: [
+        { role: "system",  content: HUMANIZE_SYSTEM_PROMPT },
+        { role: "user",    content: originalText },
+      ],
     });
 
-    const contentBlock = message.content.find((b) => b.type === "text");
-    if (!contentBlock || !contentBlock.text) {
-      throw new Error("Claude returned an empty or unexpected response structure.");
+    const choice = completion.choices?.[0];
+    humanizedText = choice?.message?.content?.trim();
+
+    if (!humanizedText) {
+      throw new Error("Groq returned an empty or unexpected response.");
     }
 
-    humanizedText = contentBlock.text.trim();
-    console.log(`[Anthropic] Received ${humanizedText.length} chars. Stop reason: ${message.stop_reason}`);
+    console.log(`[Groq] Received ${humanizedText.length} chars. Finish reason: ${choice.finish_reason}`);
 
-  } catch (anthropicError) {
-    console.error("[Anthropic] API call failed:", anthropicError.message);
+  } catch (groqError) {
+    console.error("[Groq] API call failed:", groqError.message);
     return res.status(500).json({
       success: false,
       error:   "The AI service encountered an error. Please try again shortly.",
     });
   }
 
-  // ── 5j. Return response immediately, then log to DB ──────────────────────
-  res.status(200).json({
-    success: true,
-    result:  humanizedText,
-  });
+  // ── 5g. Respond immediately, then log to DB ───────────────────────────────
+  res.status(200).json({ success: true, result: humanizedText });
 
   await logToDatabase(supabase, originalText, humanizedText);
 }

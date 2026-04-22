@@ -23,20 +23,20 @@
  *   the pair to Supabase before returning the rewritten text.
  */
 
-import { useState }       from 'react';
-import Header             from './components/Header';
-import InputPanel         from './components/InputPanel';
-import OutputPanel        from './components/OutputPanel';
-import { humanizeText }   from './api/humanize';
+import { useState } from 'react';
+import Header from './components/Header';
+import InputPanel from './components/InputPanel';
+import OutputPanel from './components/OutputPanel';
+import { humanizeText } from './api/humanize';
 
 
 
 export default function App() {
   /* ── Application state ── */
-  const [inputText,  setInputText]  = useState('');
+  const [inputText, setInputText] = useState('');
   const [outputText, setOutputText] = useState('');
-  const [isLoading,  setIsLoading]  = useState(false);
-  const [error,      setError]      = useState(null);
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState(null);
 
   /**
    * handleHumanize
