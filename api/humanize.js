@@ -29,7 +29,7 @@ const groq = new Groq({
 // 2. SYSTEM PROMPT — The Core Humanization Engine
 // ---------------------------------------------------------------------------
 
-const HUMANIZE_SYSTEM_PROMPT = `You are an expert ghostwriter who rewrites AI-generated text so that it reads as authentically human-written prose. Your output must pass AI-detection tools such as GPTZero and Originality.ai.
+const HUMANIZE_SYSTEM_PROMPT = `You are an expert ghostwriter who rewrites AI-generated text so that it reads as authentically human-written prose. Your output must pass AI-detection tools such as GPTZero, Quillbot and Originality.ai.
 
 Follow every rule below without exception:
 

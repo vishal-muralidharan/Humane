@@ -71,7 +71,7 @@ export default function App() {
     <div className="min-h-screen bg-[#09090b] text-zinc-100 flex flex-col font-sans antialiased selection:bg-zinc-800">
       <Header />
 
-      <div className="text-center pt-16 pb-8 px-4">
+      <div className="text-center pt-8 pb-6 px-4">
         <h1 className="text-4xl sm:text-5xl font-semibold tracking-tight text-white">
           Humanize Text
         </h1>
@@ -81,7 +81,7 @@ export default function App() {
       </div>
 
       <main
-        className="flex flex-col md:flex-row flex-1 gap-4 px-4 sm:px-6 lg:px-10 pb-10 max-w-7xl mx-auto w-full"
+        className="flex flex-col md:flex-row flex-1 gap-4 px-4 sm:px-6 lg:px-10 pb-10 max-w-[1600px] mx-auto w-full h-[calc(100vh-200px)]"
         role="main"
       >
         <section className="flex-1 flex flex-col" aria-label="Input section">
@@ -94,10 +94,6 @@ export default function App() {
         </section>
 
         <div className="hidden md:flex flex-col items-center gap-2 pt-10">
-          <div className="w-px flex-1 bg-zinc-800" />
-          <span className="text-[10px] font-medium text-zinc-500 uppercase tracking-widest rotate-90 my-2">
-            output
-          </span>
           <div className="w-px flex-1 bg-zinc-800" />
         </div>
 

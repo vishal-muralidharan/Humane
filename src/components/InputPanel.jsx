@@ -13,12 +13,13 @@
 
 import { Wand2, X } from 'lucide-react';
 
-const MAX_CHARS = 3000;
+const MAX_WORDS = 1000;
 
 export default function InputPanel({ inputText, setInput, onHumanize, isLoading }) {
-  const charCount  = inputText.length;
-  const isOverLimit = charCount > MAX_CHARS;
-  const isEmpty     = charCount === 0;
+  // Calculate word count. Handle empty string case to avoid counting 1 word.
+  const wordCount = inputText.trim() === '' ? 0 : inputText.trim().split(/\s+/).length;
+  const isOverLimit = wordCount > MAX_WORDS;
+  const isEmpty     = wordCount === 0;
   const canSubmit   = !isLoading && !isEmpty && !isOverLimit;
 
   return (
@@ -39,7 +40,7 @@ export default function InputPanel({ inputText, setInput, onHumanize, isLoading 
         )}
       </div>
 
-      <div className="relative flex-1 group mt-1 flex flex-col">
+      <div className="relative flex-1 group mt-2 flex flex-col min-h-0">
         <textarea
           id="input-textarea"
           value={inputText}
@@ -51,7 +52,7 @@ export default function InputPanel({ inputText, setInput, onHumanize, isLoading 
             'bg-[#111113] border border-zinc-800',
             'text-zinc-200 placeholder-zinc-600 text-sm leading-relaxed font-normal',
             'focus:outline-none focus:border-zinc-600 focus:ring-1 focus:ring-zinc-600',
-            'disabled:opacity-50 transition-all duration-300 min-h-[320px]',
+            'disabled:opacity-50 transition-all duration-300',
             isOverLimit ? 'border-red-900/50 focus:border-red-800 focus:ring-red-800' : '',
           ].join(' ')}
         />
@@ -63,11 +64,11 @@ export default function InputPanel({ inputText, setInput, onHumanize, isLoading 
       <div className="flex items-center justify-between mt-5">
         <span
           className={[
-            'text-[11px] font-medium tracking-wide tabular-nums',
-            isOverLimit ? 'text-red-500' : 'text-zinc-500',
+            'text-[11px] font-medium tracking-wide tabular-nums px-3 py-1 rounded',
+            isOverLimit ? 'text-red-500 bg-red-950/40 border border-red-900/50' : 'text-zinc-500',
           ].join(' ')}
         >
-          {charCount.toLocaleString()} / {MAX_CHARS.toLocaleString()}
+          {wordCount.toLocaleString()} / {MAX_WORDS.toLocaleString()} words
         </span>
 
         <button

@@ -71,11 +71,11 @@ export default function OutputPanel({ outputText, isLoading, error }) {
         )}
       </div>
 
-      <div className="relative flex-1 group mt-1 flex flex-col">
+      <div className="relative flex-1 group mt-2 flex flex-col min-h-0">
         <div
           className={[
             'flex-1 w-full h-full p-5 rounded-xl border border-zinc-800 bg-[#111113]',
-            'overflow-y-auto min-h-[320px] transition-all duration-300',
+            'overflow-y-auto transition-all duration-300',
             showError ? 'border-red-900/40 bg-red-950/10' : '',
           ].join(' ')}
         >
