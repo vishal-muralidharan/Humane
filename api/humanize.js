@@ -15,15 +15,9 @@ import { createClient } from "@supabase/supabase-js";
 
 // ---------------------------------------------------------------------------
 // 1. CLIENT INITIALISATION
-//    Groq client is safe at module scope — it won't throw if the key is
-//    undefined until an actual API call is made.
-//    Supabase is lazy-initialised inside the handler so a missing URL env
-//    var never causes a module-level crash.
 // ---------------------------------------------------------------------------
 
-const groq = new Groq({
-  apiKey: process.env.GROQ_API_KEY,
-});
+let groq;
 
 // ---------------------------------------------------------------------------
 // 2. SYSTEM PROMPT — The Core Humanization Engine
@@ -108,10 +102,10 @@ async function logToDatabase(supabase, originalText, humanizedText) {
 // ---------------------------------------------------------------------------
 
 export default async function handler(req, res) {
-
-  // ── 5a. Environment Variable Guard ───────────────────────────────────────
-  const missingVars = ["GROQ_API_KEY", "SUPABASE_URL", "SUPABASE_SERVICE_ROLE_KEY"]
-    .filter((k) => !process.env[k]);
+  try {
+    // ── 5a. Environment Variable Guard ───────────────────────────────────────
+    const missingVars = ["GROQ_API_KEY", "SUPABASE_URL", "SUPABASE_SERVICE_ROLE_KEY"]
+      .filter((k) => !process.env[k]);
 
   if (missingVars.length > 0) {
     console.error("[Config] Missing environment variables:", missingVars);
@@ -121,7 +115,11 @@ export default async function handler(req, res) {
     });
   }
 
-  // ── 5b. Lazy Supabase Client ──────────────────────────────────────────────
+  // ── 5b. Lazy Initialization ──────────────────────────────────────────────
+  if (!groq) {
+    groq = new Groq({ apiKey: process.env.GROQ_API_KEY });
+  }
+
   const supabase = createClient(
     process.env.SUPABASE_URL,
     process.env.SUPABASE_SERVICE_ROLE_KEY,
@@ -182,7 +180,16 @@ export default async function handler(req, res) {
   }
 
   // ── 5g. Log to DB first, then respond ───────────────────────────────
-  await logToDatabase(supabase, originalText, humanizedText);
+  try {
+    await logToDatabase(supabase, originalText, humanizedText);
+  } catch (dbError) {
+    console.error("[Supabase] Unexpected error during insert:", dbError);
+    // Don't fail the request if DB fails.
+  }
 
   res.status(200).json({ success: true, result: humanizedText });
+  } catch (err) {
+    console.error("[Unhandled Exception]", err);
+    res.status(500).json({ success: false, error: "An unexpected server error occurred." });
+  }
 }
