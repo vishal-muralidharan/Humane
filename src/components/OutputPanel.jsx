@@ -109,7 +109,7 @@ export default function OutputPanel({ outputText, isLoading, error }) {
 
       {showResult && (
         <div className="mt-5 flex items-center justify-end">
-          <DetectionBadge score={4} />
+          <DetectionBadge score={Math.floor(Math.random() * 5)} />
         </div>
       )}
     </div>
