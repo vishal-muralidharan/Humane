@@ -68,14 +68,14 @@ export default function App() {
   }
 
   return (
-    <div className="min-h-screen bg-white text-black flex flex-col">
+    <div className="min-h-screen bg-[#09090b] text-zinc-100 flex flex-col font-sans antialiased selection:bg-zinc-800">
       <Header />
 
-      <div className="text-center pt-10 pb-6 px-4">
-        <h1 className="text-3xl sm:text-4xl font-bold tracking-tight text-black">
+      <div className="text-center pt-16 pb-8 px-4">
+        <h1 className="text-4xl sm:text-5xl font-semibold tracking-tight text-white">
           Humanize Text
         </h1>
-        <p className="mt-2 text-sm text-gray-600 max-w-md mx-auto">
+        <p className="mt-3 text-sm text-zinc-400 max-w-md mx-auto font-light">
           AI to human rewrite.
         </p>
       </div>
@@ -94,11 +94,11 @@ export default function App() {
         </section>
 
         <div className="hidden md:flex flex-col items-center gap-2 pt-10">
-          <div className="w-px flex-1 bg-black" />
-          <span className="text-[10px] font-bold text-black uppercase tracking-widest rotate-90 my-2">
+          <div className="w-px flex-1 bg-zinc-800" />
+          <span className="text-[10px] font-medium text-zinc-500 uppercase tracking-widest rotate-90 my-2">
             output
           </span>
-          <div className="w-px flex-1 bg-black" />
+          <div className="w-px flex-1 bg-zinc-800" />
         </div>
 
         <section className="flex-1 flex flex-col" aria-label="Output section">

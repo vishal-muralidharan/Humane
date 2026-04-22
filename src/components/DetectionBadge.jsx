@@ -16,11 +16,11 @@ import { ShieldCheck } from 'lucide-react';
 export default function DetectionBadge({ score = 4 }) {
   return (
     <div
-      className="inline-flex items-center gap-2 px-3 py-1 border-2 border-black bg-white text-black text-xs font-bold"
+      className="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg border border-zinc-800 bg-[#111113] text-zinc-400 text-[11px] uppercase tracking-widest font-medium"
       title="Simulated AI detection score"
     >
-      <ShieldCheck size={13} strokeWidth={2.2} />
-      AI Likelihood: {score}%
+      <ShieldCheck size={14} strokeWidth={2} className="text-zinc-500" />
+      Score {score}%
     </div>
   );
 }

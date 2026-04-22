@@ -23,15 +23,15 @@ export default function InputPanel({ inputText, setInput, onHumanize, isLoading 
 
   return (
     <div className="flex flex-col h-full">
-      <div className="flex items-center justify-between mb-3">
-        <h2 className="text-sm font-bold uppercase tracking-widest text-black">
+      <div className="flex items-center justify-between mb-4">
+        <h2 className="text-xs font-semibold uppercase tracking-[0.15em] text-zinc-500">
           Input
         </h2>
 
         {inputText.length > 0 && (
           <button
             onClick={() => setInput('')}
-            className="flex items-center gap-1 text-xs text-black border-b border-black"
+            className="flex items-center gap-1 text-[11px] uppercase tracking-widest text-zinc-500 hover:text-zinc-300 transition-colors"
             aria-label="Clear input"
           >
             Clear
@@ -39,27 +39,32 @@ export default function InputPanel({ inputText, setInput, onHumanize, isLoading 
         )}
       </div>
 
-      <textarea
-        id="input-textarea"
-        value={inputText}
-        onChange={(e) => setInput(e.target.value)}
-        placeholder="Paste text here..."
-        disabled={isLoading}
-        className={[
-          'flex-1 w-full resize-none bg-white border-2 border-black p-4',
-          'text-black placeholder-gray-500 text-sm leading-relaxed',
-          'focus:outline-none focus:ring-2 focus:ring-black',
-          'disabled:opacity-50',
-          'transition-colors duration-200 min-h-[240px]',
-          isOverLimit ? 'border-red-600' : 'border-black',
-        ].join(' ')}
-      />
+      <div className="relative flex-1 group mt-1 flex flex-col">
+        <textarea
+          id="input-textarea"
+          value={inputText}
+          onChange={(e) => setInput(e.target.value)}
+          placeholder="Paste text here..."
+          disabled={isLoading}
+          className={[
+            'flex-1 w-full h-full resize-none p-5 rounded-xl',
+            'bg-[#111113] border border-zinc-800',
+            'text-zinc-200 placeholder-zinc-600 text-sm leading-relaxed font-normal',
+            'focus:outline-none focus:border-zinc-600 focus:ring-1 focus:ring-zinc-600',
+            'disabled:opacity-50 transition-all duration-300 min-h-[320px]',
+            isOverLimit ? 'border-red-900/50 focus:border-red-800 focus:ring-red-800' : '',
+          ].join(' ')}
+        />
+        
+        {/* Subtle gradient glow in dark mode */}
+        <div className="absolute inset-0 -z-10 bg-gradient-to-tr from-zinc-900 via-[#111113] to-[#111113] rounded-xl opacity-50 pointer-events-none" />
+      </div>
 
-      <div className="flex items-center justify-between mt-3">
+      <div className="flex items-center justify-between mt-5">
         <span
           className={[
-            'text-xs font-bold tabular-nums',
-            isOverLimit ? 'text-red-600' : 'text-black',
+            'text-[11px] font-medium tracking-wide tabular-nums',
+            isOverLimit ? 'text-red-500' : 'text-zinc-500',
           ].join(' ')}
         >
           {charCount.toLocaleString()} / {MAX_CHARS.toLocaleString()}
@@ -70,17 +75,16 @@ export default function InputPanel({ inputText, setInput, onHumanize, isLoading 
           onClick={onHumanize}
           disabled={!canSubmit}
           className={[
-            'flex items-center gap-2 px-6 py-2 border-2 border-black text-sm font-bold',
-            'bg-black text-white hover:bg-gray-800 active:scale-95',
-            'disabled:opacity-40 disabled:active:scale-100',
+            'flex items-center justify-center gap-2 px-6 py-2.5 rounded-xl text-sm font-medium tracking-wide w-36',
+            'bg-zinc-100 text-zinc-900 hover:bg-white active:scale-[0.98]',
+            'transition-all duration-200 shadow-[0_0_15px_rgba(255,255,255,0.05)]',
+            'disabled:opacity-50 disabled:bg-zinc-800 disabled:text-zinc-500 disabled:active:scale-100 disabled:shadow-none cursor-pointer disabled:cursor-not-allowed',
           ].join(' ')}
         >
           {isLoading ? (
-            <span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
-          ) : (
-            null
-          )}
-          {isLoading ? 'Processing...' : 'Humanize'}
+            <span className="w-4 h-4 border-[2px] border-zinc-900/30 border-t-zinc-900 rounded-full animate-spin" />
+          ) : null}
+          {isLoading ? 'Wait...' : 'Humanize'}
         </button>
       </div>
     </div>

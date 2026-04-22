@@ -19,11 +19,15 @@ export async function humanizeText(text) {
     body:    JSON.stringify({ text }),
   });
 
-  // Parse JSON regardless of status so we can surface the API's error message.
-  const data = await response.json();
+  let data;
+  try {
+    data = await response.json();
+  } catch (err) {
+    const textData = await response.text();
+    throw new Error(`Server error (${response.status}): ${textData}`);
+  }
 
   if (!response.ok || !data.success) {
-    // Prefer the server's own error string; fall back to the HTTP status.
     throw new Error(data.error || `Server error (${response.status})`);
   }
 

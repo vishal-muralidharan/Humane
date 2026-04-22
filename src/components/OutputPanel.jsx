@@ -47,8 +47,8 @@ export default function OutputPanel({ outputText, isLoading, error }) {
 
   return (
     <div className="flex flex-col h-full">
-      <div className="flex items-center justify-between mb-3">
-        <h2 className="text-sm font-bold uppercase tracking-widest text-black">
+      <div className="flex items-center justify-between mb-4">
+        <h2 className="text-xs font-semibold uppercase tracking-[0.15em] text-zinc-500">
           Output
         </h2>
 
@@ -57,56 +57,58 @@ export default function OutputPanel({ outputText, isLoading, error }) {
             id="copy-btn"
             onClick={handleCopy}
             className={[
-              'flex items-center gap-1.5 text-xs font-bold px-3 py-1.5 border-2',
-              'transition-all duration-200',
+              'flex items-center gap-1.5 text-[11px] uppercase tracking-widest px-3 py-1.5 rounded-lg font-medium',
+              'transition-all duration-200 border border-zinc-800',
               copied
-                ? 'text-black border-black bg-gray-200'
-                : 'text-black border-black bg-white hover:bg-gray-100',
+                ? 'text-zinc-100 bg-zinc-800'
+                : 'text-zinc-400 bg-[#111113] hover:text-zinc-200 hover:bg-zinc-800/80',
             ].join(' ')}
             aria-label="Copy humanized text to clipboard"
           >
-            {copied ? <CheckCheck size={14} /> : <Copy size={14} />}
+            {copied ? <CheckCheck size={13} /> : <Copy size={13} />}
             {copied ? 'Copied' : 'Copy'}
           </button>
         )}
       </div>
 
-      <div
-        className={[
-          'flex-1 border-2 p-4 overflow-y-auto min-h-[240px]',
-          'transition-colors duration-300',
-          showError
-            ? 'border-red-600 bg-white text-black'
-            : 'border-black bg-white text-black',
-        ].join(' ')}
-      >
-        {isLoading && <SkeletonLoader />}
+      <div className="relative flex-1 group mt-1 flex flex-col">
+        <div
+          className={[
+            'flex-1 w-full h-full p-5 rounded-xl border border-zinc-800 bg-[#111113]',
+            'overflow-y-auto min-h-[320px] transition-all duration-300',
+            showError ? 'border-red-900/40 bg-red-950/10' : '',
+          ].join(' ')}
+        >
+          {isLoading && <SkeletonLoader />}
 
-        {showIdle && (
-          <div className="flex flex-col items-center justify-center h-full gap-3 text-center text-gray-500 select-none">
-            <FileText size={40} strokeWidth={1.2} />
-            <p className="text-sm leading-relaxed max-w-xs">
-              Output will appear here.
+          {showIdle && (
+            <div className="flex flex-col items-center justify-center h-full gap-4 text-center text-zinc-600 select-none">
+              <FileText size={32} strokeWidth={1} />
+              <p className="text-sm font-light leading-relaxed max-w-xs tracking-wide">
+                Refined output will appear here.
+              </p>
+            </div>
+          )}
+
+          {showError && (
+            <div className="flex flex-col gap-2 h-full items-center justify-center text-center">
+              <p className="text-[13px] uppercase tracking-widest font-semibold text-red-500/80">Fault</p>
+              <p className="text-sm font-light text-zinc-400 max-w-sm">{error}</p>
+            </div>
+          )}
+
+          {showResult && (
+            <p className="text-zinc-200 text-sm leading-relaxed whitespace-pre-wrap select-text font-normal">
+              {outputText}
             </p>
-          </div>
-        )}
-
-        {showError && (
-          <div className="flex flex-col gap-1">
-            <p className="text-sm font-bold text-red-600">Error</p>
-            <p className="text-xs text-black">{error}</p>
-          </div>
-        )}
-
-        {showResult && (
-          <p className="text-black text-sm leading-relaxed whitespace-pre-wrap select-text">
-            {outputText}
-          </p>
-        )}
+          )}
+        </div>
+        
+        <div className="absolute inset-0 -z-10 bg-gradient-to-tr from-zinc-900 via-[#111113] to-[#111113] rounded-xl opacity-50 pointer-events-none" />
       </div>
 
       {showResult && (
-        <div className="mt-3 flex items-center gap-2">
+        <div className="mt-5 flex items-center justify-end">
           <DetectionBadge score={4} />
         </div>
       )}
