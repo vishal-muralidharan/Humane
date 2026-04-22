@@ -16,23 +16,15 @@ import { createClient } from "@supabase/supabase-js";
 
 // ---------------------------------------------------------------------------
 // 1. CLIENT INITIALISATION
-//    Both clients are created once at module scope so they are reused across
-//    warm-invocations of the same serverless instance (Vercel keeps them alive
-//    for a short period between requests).  Cold-start overhead is paid only
-//    once per instance lifecycle.
+//    Anthropic is safe to create at module scope (handles undefined key
+//    gracefully until a request is made).
+//    Supabase is created INSIDE the handler so a missing SUPABASE_URL env var
+//    never crashes the module before it can return a proper JSON error.
 // ---------------------------------------------------------------------------
 
 const anthropic = new Anthropic({
-  // ANTHROPIC_API_KEY is read automatically by the SDK from process.env,
-  // but we are explicit here so the intent is obvious in code review.
   apiKey: process.env.ANTHROPIC_API_KEY,
 });
-
-const supabase = createClient(
-  process.env.SUPABASE_URL,       // e.g. https://xxxx.supabase.co
-  process.env.SUPABASE_SERVICE_ROLE_KEY  // Use the service-role key on the server
-                                          // (never the anon key) — it bypasses RLS.
-);
 
 // ---------------------------------------------------------------------------
 // 2. SYSTEM PROMPT — The Core Humanization Engine
@@ -92,23 +84,19 @@ function validatePayload(body) {
 
 // ---------------------------------------------------------------------------
 // 4. DATABASE LOGGING
-//    Runs the Supabase INSERT and logs any failure without re-throwing.
-//    Because the response has already been sent to the client before this
-//    is awaited (see fire-and-forget pattern in the handler), a DB error
-//    never degrades the user experience.
+//    Accepts the supabase client as a parameter (created inside handler).
+//    Swallows errors — a DB failure never degrades the user response.
 // ---------------------------------------------------------------------------
 
-async function logToDatabase(originalText, humanizedText) {
+async function logToDatabase(supabase, originalText, humanizedText) {
   const { error } = await supabase
     .from("generations")
     .insert({
-      // 'id' is omitted — the column default (gen_random_uuid()) handles it.
-      original_text:   originalText,
-      humanized_text:  humanizedText,
+      original_text:  originalText,
+      humanized_text: humanizedText,
     });
 
   if (error) {
-    // Log server-side only. Never expose DB internals to the client.
     console.error("[Supabase] INSERT failed:", {
       message: error.message,
       code:    error.code,
@@ -125,7 +113,32 @@ async function logToDatabase(originalText, humanizedText) {
 
 export default async function handler(req, res) {
 
-  // ── 5a. Method Guard ─────────────────────────────────────────────────────
+  // ── 5a. Environment Variable Guard ───────────────────────────────────────
+  // Validate required env vars FIRST so a misconfigured deployment returns
+  // a clear JSON error instead of an unhandled module-level crash.
+  const missingVars = [
+    "ANTHROPIC_API_KEY",
+    "SUPABASE_URL",
+    "SUPABASE_SERVICE_ROLE_KEY",
+  ].filter((k) => !process.env[k]);
+
+  if (missingVars.length > 0) {
+    console.error("[Config] Missing environment variables:", missingVars);
+    return res.status(500).json({
+      success: false,
+      error:   `Server misconfiguration: missing env vars: ${missingVars.join(", ")}.`,
+    });
+  }
+
+  // ── 5b. Lazy Supabase Client ──────────────────────────────────────────────
+  // Created here (not at module scope) so a missing URL never crashes the
+  // module before we can return a proper JSON error response.
+  const supabase = createClient(
+    process.env.SUPABASE_URL,
+    process.env.SUPABASE_SERVICE_ROLE_KEY,
+  );
+
+  // ── 5c. Method Guard ─────────────────────────────────────────────────────
   if (req.method !== "POST") {
     res.setHeader("Allow", "POST");
     return res.status(405).json({
@@ -134,20 +147,16 @@ export default async function handler(req, res) {
     });
   }
 
-  // ── 5b. CORS Headers (adjust origin in production) ───────────────────────
-  // Vercel handles CORS at the edge via vercel.json for most cases, but
-  // setting it here ensures correctness even when testing locally with
-  // `vercel dev`.
-  res.setHeader("Access-Control-Allow-Origin", process.env.ALLOWED_ORIGIN || "*");
+  // ── 5d. CORS Headers ─────────────────────────────────────────────────────
+  res.setHeader("Access-Control-Allow-Origin",  process.env.ALLOWED_ORIGIN || "*");
   res.setHeader("Access-Control-Allow-Methods", "POST, OPTIONS");
   res.setHeader("Access-Control-Allow-Headers", "Content-Type");
 
-  // Handle pre-flight OPTIONS request
   if (req.method === "OPTIONS") {
     return res.status(204).end();
   }
 
-  // ── 5c. Input Validation ─────────────────────────────────────────────────
+  // ── 5h. Input Validation ─────────────────────────────────────────────────
   const validationError = validatePayload(req.body);
   if (validationError) {
     return res.status(400).json({
@@ -158,7 +167,7 @@ export default async function handler(req, res) {
 
   const originalText = req.body.text.trim();
 
-  // ── 5d. Claude API Call ───────────────────────────────────────────────────
+  // ── 5i. Claude API Call ───────────────────────────────────────────────────
   let humanizedText;
 
   try {
@@ -166,25 +175,12 @@ export default async function handler(req, res) {
 
     const message = await anthropic.messages.create({
       model:      "claude-3-5-sonnet-20240620",
-      max_tokens:  4096,  // generous ceiling; Claude won't exceed the actual output size
-
-      // The system prompt defines Claude's persona and hard rules.
-      system: HUMANIZE_SYSTEM_PROMPT,
-
-      messages: [
-        {
-          role:    "user",
-          // We do not add any extra framing — the system prompt already fully
-          // scopes Claude's task.  Sending raw text keeps the output clean.
-          content: originalText,
-        },
-      ],
+      max_tokens:  4096,
+      system:      HUMANIZE_SYSTEM_PROMPT,
+      messages: [{ role: "user", content: originalText }],
     });
 
-    // Extract the text content block from the response.
-    // Claude always returns at least one content block of type "text".
     const contentBlock = message.content.find((b) => b.type === "text");
-
     if (!contentBlock || !contentBlock.text) {
       throw new Error("Claude returned an empty or unexpected response structure.");
     }
@@ -193,30 +189,18 @@ export default async function handler(req, res) {
     console.log(`[Anthropic] Received ${humanizedText.length} chars. Stop reason: ${message.stop_reason}`);
 
   } catch (anthropicError) {
-    // Catch Anthropic SDK errors (network issues, rate limits, invalid API key, etc.)
     console.error("[Anthropic] API call failed:", anthropicError.message);
-
     return res.status(500).json({
       success: false,
       error:   "The AI service encountered an error. Please try again shortly.",
     });
   }
 
-  // ── 5e. Return Response to Client (immediately) ───────────────────────────
-  // We send the response NOW, before waiting for the DB write.
-  // The Supabase INSERT is then awaited below in a non-blocking manner.
-  // 
-  // IMPORTANT: Vercel keeps the serverless function alive until all Promises
-  // resolve, so the DB write WILL complete — the user just doesn't have to
-  // wait for it.  This pattern is sometimes called "fire-and-forget" but is
-  // more accurately a "background task within the same invocation."
+  // ── 5j. Return response immediately, then log to DB ──────────────────────
   res.status(200).json({
     success: true,
     result:  humanizedText,
   });
 
-  // ── 5f. Async Database Logging (after response is sent) ──────────────────
-  // Any error here is swallowed inside logToDatabase() and only logged
-  // server-side, so it cannot crash the invocation or affect the client.
-  await logToDatabase(originalText, humanizedText);
+  await logToDatabase(supabase, originalText, humanizedText);
 }
