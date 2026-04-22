@@ -13,22 +13,12 @@
 
 import { ShieldCheck } from 'lucide-react';
 
-function getTier(score) {
-  if (score <= 15) return { label: 'Human',    ring: 'border-emerald-500/50', dot: 'bg-emerald-400', text: 'text-emerald-300' };
-  if (score <= 40) return { label: 'Moderate', ring: 'border-amber-500/50',  dot: 'bg-amber-400',   text: 'text-amber-300'  };
-  return                  { label: 'Detected', ring: 'border-red-500/50',    dot: 'bg-red-400',     text: 'text-red-300'    };
-}
-
 export default function DetectionBadge({ score = 4 }) {
-  const { ring, dot, text } = getTier(score);
-
   return (
     <div
-      className={`inline-flex items-center gap-2 px-3 py-1 rounded-full border bg-slate-900 text-xs font-semibold ${ring} ${text}`}
-      title="Simulated AI detection score — wire up a real detector in Phase 2"
+      className="inline-flex items-center gap-2 px-3 py-1 border-2 border-black bg-white text-black text-xs font-bold"
+      title="Simulated AI detection score"
     >
-      {/* Pulsing coloured dot */}
-      <span className={`w-1.5 h-1.5 rounded-full ${dot} animate-pulse`} />
       <ShieldCheck size={13} strokeWidth={2.2} />
       AI Likelihood: {score}%
     </div>

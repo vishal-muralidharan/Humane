@@ -67,36 +67,23 @@ export default function App() {
     }
   }
 
-  /* ── Render ── */
   return (
-    /*
-     * Full-viewport dark background.
-     * On md+ screens: flex-row (side by side).
-     * On mobile:      flex-col (stacked, input on top).
-     */
-    <div className="min-h-screen bg-slate-950 text-slate-100 flex flex-col">
-      {/* ── Sticky top bar ── */}
+    <div className="min-h-screen bg-white text-black flex flex-col">
       <Header />
 
-      {/* ── Hero sub-header ── */}
       <div className="text-center pt-10 pb-6 px-4">
-        <h1 className="text-3xl sm:text-4xl font-bold tracking-tight text-white">
-          Make AI Text Sound{' '}
-          <span className="text-transparent bg-clip-text bg-gradient-to-r from-violet-400 to-fuchsia-400">
-            Human
-          </span>
+        <h1 className="text-3xl sm:text-4xl font-bold tracking-tight text-black">
+          Humanize Text
         </h1>
-        <p className="mt-2 text-sm text-slate-400 max-w-md mx-auto">
-          Paste AI-generated content and get a natural, bypass-ready rewrite in seconds.
+        <p className="mt-2 text-sm text-gray-600 max-w-md mx-auto">
+          AI to human rewrite.
         </p>
       </div>
 
-      {/* ── Split-screen panels ── */}
       <main
         className="flex flex-col md:flex-row flex-1 gap-4 px-4 sm:px-6 lg:px-10 pb-10 max-w-7xl mx-auto w-full"
         role="main"
       >
-        {/* Left: Input */}
         <section className="flex-1 flex flex-col" aria-label="Input section">
           <InputPanel
             inputText={inputText}
@@ -106,16 +93,14 @@ export default function App() {
           />
         </section>
 
-        {/* ── Vertical divider (desktop only) ── */}
         <div className="hidden md:flex flex-col items-center gap-2 pt-10">
-          <div className="w-px flex-1 bg-gradient-to-b from-transparent via-slate-700 to-transparent" />
-          <span className="text-[10px] font-semibold text-slate-600 uppercase tracking-widest rotate-90 my-2 whitespace-nowrap">
+          <div className="w-px flex-1 bg-black" />
+          <span className="text-[10px] font-bold text-black uppercase tracking-widest rotate-90 my-2">
             output
           </span>
-          <div className="w-px flex-1 bg-gradient-to-b from-transparent via-slate-700 to-transparent" />
+          <div className="w-px flex-1 bg-black" />
         </div>
 
-        {/* Right: Output */}
         <section className="flex-1 flex flex-col" aria-label="Output section">
           <OutputPanel
             outputText={outputText}
