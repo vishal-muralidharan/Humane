@@ -152,10 +152,10 @@ export default async function handler(req, res) {
   let humanizedText;
 
   try {
-    console.log(`[Groq] Sending ${originalText.length} chars to Llama 3.1 70B...`);
+    console.log(`[Groq] Sending ${originalText.length} chars to Llama 3.3 70B...`);
 
     const completion = await groq.chat.completions.create({
-      model:       "llama-3.1-70b-versatile", // free on Groq; swap to llama-3.1-8b-instant for lower latency
+      model:       "llama-3.3-70b-versatile", // free on Groq; updated to 3.3
       max_tokens:  4096,
       temperature: 0.85, // slightly higher than default → more varied, natural-feeling output
       messages: [
@@ -177,7 +177,7 @@ export default async function handler(req, res) {
     console.error("[Groq] API call failed:", groqError.message);
     return res.status(500).json({
       success: false,
-      error:   "The AI service encountered an error. Please try again shortly.",
+      error:   `The AI service encountered an error: ${groqError.message || "Please try again shortly."}`,
     });
   }
 
