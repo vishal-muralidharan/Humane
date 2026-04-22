@@ -19,16 +19,16 @@ export async function humanizeText(text) {
     body:    JSON.stringify({ text }),
   });
 
+  const textData = await response.text();
   let data;
   try {
-    data = await response.json();
+    data = JSON.parse(textData);
   } catch (err) {
-    const textData = await response.text();
     throw new Error(`Server error (${response.status}): ${textData}`);
   }
 
   if (!response.ok || !data.success) {
-    throw new Error(data.error || `Server error (${response.status})`);
+    throw new Error(data?.error || `Server error (${response.status})`);
   }
 
   return data.result;
