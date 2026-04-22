@@ -1,22 +1,8 @@
-/**
- * InputPanel.jsx
- * ──────────────
- * Left half of the split-screen layout.
- *
- * Props:
- *   inputText   {string}   — controlled textarea value
- *   setInput    {fn}       — setter to update inputText in parent state
- *   onHumanize  {fn}       — callback fired when user clicks "Humanize Text"
- *   isLoading   {boolean}  — disables the button while a request is in-flight
- *   maxChars    {number}   — character limit (default 3000)
- */
-
 import { Wand2, X } from 'lucide-react';
 
 const MAX_WORDS = 1000;
 
 export default function InputPanel({ inputText, setInput, onHumanize, isLoading }) {
-  // Calculate word count. Handle empty string case to avoid counting 1 word.
   const wordCount = inputText.trim() === '' ? 0 : inputText.trim().split(/\s+/).length;
   const isOverLimit = wordCount > MAX_WORDS;
   const isEmpty     = wordCount === 0;

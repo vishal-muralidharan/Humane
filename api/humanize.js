@@ -1,27 +1,7 @@
-// =============================================================================
-// api/humanize.js
-// Vercel Serverless Function — AI Text Humanizer
-//
-// Route  : POST /api/humanize
-// Payload: { "text": "..." }
-// Returns: { "success": true, "result": "..." }
-//
-// Provider: Groq (free tier) — Meta Llama 3.1 70B
-// DB:       Supabase Postgres (generations table)
-// =============================================================================
-
 import Groq from "groq-sdk";
 import { createClient } from "@supabase/supabase-js";
 
-// ---------------------------------------------------------------------------
-// 1. CLIENT INITIALISATION
-// ---------------------------------------------------------------------------
-
 let groq;
-
-// ---------------------------------------------------------------------------
-// 2. SYSTEM PROMPT — The Core Humanization Engine
-// ---------------------------------------------------------------------------
 
 const HUMANIZE_SYSTEM_PROMPT = `You are an expert ghostwriter who rewrites AI-generated text so that it reads as authentically human-written prose. Your output must pass AI-detection tools such as GPTZero, Quillbot and Originality.ai.
 
@@ -73,11 +53,6 @@ function validatePayload(body) {
   return null;
 }
 
-// ---------------------------------------------------------------------------
-// 4. DATABASE LOGGING
-//    Swallows errors — a DB failure never degrades the user response.
-// ---------------------------------------------------------------------------
-
 async function logToDatabase(supabase, originalText, humanizedText) {
   const { error } = await supabase
     .from("generations")
@@ -97,13 +72,8 @@ async function logToDatabase(supabase, originalText, humanizedText) {
   }
 }
 
-// ---------------------------------------------------------------------------
-// 5. MAIN HANDLER
-// ---------------------------------------------------------------------------
-
 export default async function handler(req, res) {
   try {
-    // ── 5a. Environment Variable Guard ───────────────────────────────────────
     const missingVars = ["GROQ_API_KEY", "SUPABASE_URL", "SUPABASE_SERVICE_ROLE_KEY"]
       .filter((k) => !process.env[k]);
 
@@ -115,7 +85,6 @@ export default async function handler(req, res) {
     });
   }
 
-  // ── 5b. Lazy Initialization ──────────────────────────────────────────────
   if (!groq) {
     groq = new Groq({ apiKey: process.env.GROQ_API_KEY });
   }
@@ -125,28 +94,23 @@ export default async function handler(req, res) {
     process.env.SUPABASE_SERVICE_ROLE_KEY,
   );
 
-  // ── 5c. Method Guard ─────────────────────────────────────────────────────
   if (req.method !== "POST") {
     res.setHeader("Allow", "POST");
     return res.status(405).json({ success: false, error: "Method Not Allowed. Use POST." });
   }
 
-  // ── 5d. CORS Headers ─────────────────────────────────────────────────────
   res.setHeader("Access-Control-Allow-Origin",  process.env.ALLOWED_ORIGIN || "*");
   res.setHeader("Access-Control-Allow-Methods", "POST, OPTIONS");
   res.setHeader("Access-Control-Allow-Headers", "Content-Type");
 
   if (req.method === "OPTIONS") return res.status(204).end();
 
-  // ── 5e. Input Validation ─────────────────────────────────────────────────
   const validationError = validatePayload(req.body);
   if (validationError) {
     return res.status(400).json({ success: false, error: validationError });
   }
 
   const originalText = req.body.text.trim();
-
-  // ── 5f. Groq / Llama API Call ─────────────────────────────────────────────
   let humanizedText;
 
   try {
@@ -178,8 +142,6 @@ export default async function handler(req, res) {
       error:   `The AI service encountered an error: ${groqError.message || "Please try again shortly."}`,
     });
   }
-
-  // ── 5g. Log to DB first, then respond ───────────────────────────────
   try {
     await logToDatabase(supabase, originalText, humanizedText);
   } catch (dbError) {

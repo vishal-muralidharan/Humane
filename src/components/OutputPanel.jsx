@@ -1,24 +1,6 @@
-/**
- * OutputPanel.jsx
- * ───────────────
- * Right half of the split-screen layout.
- *
- * Possible states:
- *   1. idle      — friendly empty state (no text yet)
- *   2. loading   — SkeletonLoader shown while mock API runs
- *   3. error     — red error banner
- *   4. result    — humanized text + DetectionBadge + copy button
- *
- * Props:
- *   outputText  {string}
- *   isLoading   {boolean}
- *   error       {string|null}
- */
-
 import { useState } from 'react';
 import { Copy, CheckCheck, FileText } from 'lucide-react';
 import SkeletonLoader  from './SkeletonLoader';
-import DetectionBadge  from './DetectionBadge';
 
 export default function OutputPanel({ outputText, isLoading, error }) {
   const [copied, setCopied] = useState(false);
@@ -108,8 +90,10 @@ export default function OutputPanel({ outputText, isLoading, error }) {
       </div>
 
       {showResult && (
-        <div className="mt-5 flex items-center justify-end">
-          <DetectionBadge score={Math.floor(Math.random() * 5)} />
+        <div className="mt-2 flex items-center justify-start">
+          <span className="text-[11px] font-medium tracking-wide tabular-nums text-zinc-500 py-1">
+            {outputText.trim() === '' ? 0 : outputText.trim().split(/\s+/).length} words
+          </span>
         </div>
       )}
     </div>
