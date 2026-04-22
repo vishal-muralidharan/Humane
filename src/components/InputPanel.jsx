@@ -10,7 +10,7 @@ export default function InputPanel({ inputText, setInput, onHumanize, isLoading 
 
   return (
     <div className="flex flex-col h-full">
-      <div className="flex items-center justify-between mb-4">
+      <div className="flex items-center justify-between mb-4 h-8">
         <h2 className="text-xs font-semibold uppercase tracking-[0.15em] text-zinc-500">
           Input
         </h2>
@@ -47,7 +47,7 @@ export default function InputPanel({ inputText, setInput, onHumanize, isLoading 
         <div className="absolute inset-0 -z-10 bg-gradient-to-tr from-zinc-900 via-[#111113] to-[#111113] rounded-xl opacity-50 pointer-events-none" />
       </div>
 
-      <div className="flex items-center justify-between mt-5">
+      <div className="flex items-center justify-between mt-5 h-10">
         <span
           className={[
             'text-[11px] font-medium tracking-wide tabular-nums px-3 py-1 rounded',

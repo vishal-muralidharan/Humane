@@ -29,7 +29,7 @@ export default function OutputPanel({ outputText, isLoading, error }) {
 
   return (
     <div className="flex flex-col h-full">
-      <div className="flex items-center justify-between mb-4">
+      <div className="flex items-center justify-between mb-4 h-8">
         <h2 className="text-xs font-semibold uppercase tracking-[0.15em] text-zinc-500">
           Output
         </h2>
@@ -89,13 +89,13 @@ export default function OutputPanel({ outputText, isLoading, error }) {
         <div className="absolute inset-0 -z-10 bg-gradient-to-tr from-zinc-900 via-[#111113] to-[#111113] rounded-xl opacity-50 pointer-events-none" />
       </div>
 
-      {showResult && (
-        <div className="mt-2 flex items-center justify-start">
-          <span className="text-[11px] font-medium tracking-wide tabular-nums text-zinc-500 py-1">
+      <div className="mt-5 flex items-center justify-start h-10">
+        {showResult && (
+          <span className="text-[11px] font-medium tracking-wide tabular-nums px-3 py-1 rounded bg-zinc-900/40 border border-zinc-800/80 text-zinc-400">
             {outputText.trim() === '' ? 0 : outputText.trim().split(/\s+/).length} words
           </span>
-        </div>
-      )}
+        )}
+      </div>
     </div>
   );
 }
