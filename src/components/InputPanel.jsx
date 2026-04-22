@@ -45,7 +45,7 @@ export default function InputPanel({ inputText, setInput, onHumanize, isLoading 
           id="input-textarea"
           value={inputText}
           onChange={(e) => setInput(e.target.value)}
-          placeholder="Paste text here..."
+          placeholder="Paste text here"
           disabled={isLoading}
           className={[
             'flex-1 w-full h-full resize-none p-5 rounded-xl',

@@ -72,10 +72,10 @@ export default function App() {
       <Header />
 
       <div className="text-center pt-8 pb-6 px-4">
-        <h1 className="text-4xl sm:text-5xl font-semibold tracking-tight text-white">
+        <h1 className="text-xl sm:text-3xl font-semibold tracking-tight text-white">
           Humanize Text
         </h1>
-        <p className="mt-3 text-sm text-zinc-400 max-w-md mx-auto font-light">
+        <p className="mt-2 text-sm text-zinc-400 max-w-md mx-auto font-light tracking-wide">
           AI to human rewrite.
         </p>
       </div>
