@@ -181,8 +181,8 @@ export default async function handler(req, res) {
     });
   }
 
-  // ── 5g. Respond immediately, then log to DB ───────────────────────────────
-  res.status(200).json({ success: true, result: humanizedText });
-
+  // ── 5g. Log to DB first, then respond ───────────────────────────────
   await logToDatabase(supabase, originalText, humanizedText);
+
+  res.status(200).json({ success: true, result: humanizedText });
 }
