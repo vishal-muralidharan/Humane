@@ -1,6 +1,6 @@
 /**
- * App.jsx — AI Text Humanizer (Phase 1 MVP)
- * ==========================================
+ * App.jsx — AI Text Humanizer (Phase 2)
+ * =======================================
  * Root component. Owns all application-level state and orchestrates
  * the split-screen layout:
  *
@@ -17,35 +17,19 @@
  *   isLoading  — true while the API request is in-flight
  *   error      — error message string, or null if no error
  *
- * API contract (Phase 1 — MOCK):
- *   handleHumanize simulates a 3-second network delay and then sets a
- *   fixed dummy string as the output. Replace the setTimeout block with
- *   a real fetch() call to your Node.js backend in Phase 2.
+ * API contract (Phase 2 — LIVE):
+ *   handleHumanize calls POST /api/humanize via the humanizeText() helper.
+ *   The serverless function sends inputText to Claude 3.5 Sonnet and logs
+ *   the pair to Supabase before returning the rewritten text.
  */
 
-import { useState } from 'react';
-import Header      from './components/Header';
-import InputPanel  from './components/InputPanel';
-import OutputPanel from './components/OutputPanel';
+import { useState }       from 'react';
+import Header             from './components/Header';
+import InputPanel         from './components/InputPanel';
+import OutputPanel        from './components/OutputPanel';
+import { humanizeText }   from './api/humanize';
 
-/* ── Dummy response shown while the real backend is not yet wired up ── */
-const MOCK_RESPONSE = `You know, when I first started thinking about this, I wasn't entirely sure \
-where I'd land. But the more I turned it over in my mind, the clearer it became: the way \
-artificial intelligence is evolving isn't just a technical story — it's fundamentally a human one.
 
-There's something almost paradoxical about it. We build these systems to think on our behalf, \
-and then we find ourselves working overtime to make them sound less like systems. The irony \
-isn't lost on me.
-
-Still, I think that tension is worth sitting with rather than rushing past. It tells us \
-something important about what we actually value in communication — not just the transfer of \
-information, but the sense of a person on the other end. Warmth. Doubt. A little imperfection. \
-The feeling that someone genuinely thought about what they were saying, rather than generating \
-it at speed.
-
-That's what good writing has always done. And perhaps that's exactly what we should keep in mind \
-as these tools become more capable: the goal isn't to hide the machine, but to remember why \
-the human touch mattered in the first place.`;
 
 export default function App() {
   /* ── Application state ── */
@@ -57,18 +41,9 @@ export default function App() {
   /**
    * handleHumanize
    * ──────────────
-   * Phase 1: simulates a backend call with a 3-second setTimeout.
-   *
-   * Phase 2 replacement — swap the setTimeout block for:
-   *
-   *   const response = await fetch('/api/humanize', {
-   *     method:  'POST',
-   *     headers: { 'Content-Type': 'application/json' },
-   *     body:    JSON.stringify({ text: inputText }),
-   *   });
-   *   if (!response.ok) throw new Error('Server error: ' + response.status);
-   *   const data = await response.json();
-   *   setOutputText(data.humanizedText);
+   * Phase 2: calls POST /api/humanize via the humanizeText() helper.
+   * The serverless function sends the text to Claude 3.5 Sonnet and
+   * logs the original + result pair to Supabase before responding.
    */
   async function handleHumanize() {
     if (!inputText.trim()) return;
@@ -79,9 +54,9 @@ export default function App() {
     setError(null);
 
     try {
-      // ── MOCK: replace this block with a real fetch() in Phase 2 ──
-      await new Promise((resolve) => setTimeout(resolve, 3000));
-      setOutputText(MOCK_RESPONSE);
+      // ── LIVE: real call to /api/humanize serverless function ──────
+      const result = await humanizeText(inputText);
+      setOutputText(result);
       // ──────────────────────────────────────────────────────────────
     } catch (err) {
       // Surface any network / server errors to the user
