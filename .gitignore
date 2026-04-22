@@ -1,3 +1,10 @@
+# Secrets — never commit
+.env.local
+.env.*.local
+
+# Vercel CLI cache
+.vercel
+
 # Logs
 logs
 *.log
