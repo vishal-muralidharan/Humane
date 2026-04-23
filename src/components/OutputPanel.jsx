@@ -56,8 +56,9 @@ export default function OutputPanel({ outputText, isLoading, error }) {
       <div className="relative flex-1 group mt-2 flex flex-col min-h-0">
         <div
           className={[
-            'flex-1 w-full h-full p-5 rounded-xl border border-zinc-800 bg-[#111113]',
-            'overflow-y-auto transition-all duration-300',
+            'w-full p-5 rounded-xl border border-zinc-800 bg-[#111113]',
+            'overflow-y-auto overflow-x-hidden transition-all duration-300',
+            'min-h-[150px] h-auto max-h-[60vh] md:max-h-none md:flex-1 md:h-full',
             showError ? 'border-red-900/40 bg-red-950/10' : '',
           ].join(' ')}
         >
@@ -80,7 +81,7 @@ export default function OutputPanel({ outputText, isLoading, error }) {
           )}
 
           {showResult && (
-            <p className="text-zinc-200 text-sm leading-relaxed whitespace-pre-wrap select-text font-normal">
+            <p className="text-zinc-200 text-sm leading-relaxed whitespace-pre-wrap select-text font-normal break-words">
               {outputText}
             </p>
           )}

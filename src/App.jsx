@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Header from './components/Header';
 import InputPanel from './components/InputPanel';
 import OutputPanel from './components/OutputPanel';
@@ -9,6 +9,7 @@ export default function App() {
   const [outputText, setOutputText] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState(null);
+  const [activeTab, setActiveTab] = useState('input'); // For mobile layout
 
   async function handleHumanize() {
     if (!inputText.trim()) return;
@@ -16,6 +17,7 @@ export default function App() {
     setIsLoading(true);
     setOutputText('');
     setError(null);
+    setActiveTab('output'); // Automatically switch to output on mobile when submitted
 
     try {
       const result = await humanizeText(inputText);
@@ -31,7 +33,7 @@ export default function App() {
     <div className="min-h-screen bg-[#09090b] text-zinc-100 flex flex-col font-sans antialiased selection:bg-zinc-800">
       <Header />
 
-      <div className="text-center pt-8 pb-6 px-4">
+      <div className="text-center pt-8 pb-4 md:pb-6 px-4">
         <h1 className="text-xl sm:text-3xl font-semibold tracking-tight text-white">
           Humanize Text
         </h1>
@@ -40,11 +42,36 @@ export default function App() {
         </p>
       </div>
 
+      {/* Mobile Tabs */}
+      <div className="md:hidden flex justify-center px-4 pb-4">
+        <div className="flex bg-zinc-900/50 p-1 rounded-lg border border-zinc-800 w-full max-w-xs">
+          <button
+            onClick={() => setActiveTab('input')}
+            className={`flex-1 py-1.5 text-xs font-semibold uppercase tracking-wider rounded-md transition-colors ${
+              activeTab === 'input' ? 'bg-zinc-800 text-white shadow-sm' : 'text-zinc-500 hover:text-zinc-300'
+            }`}
+          >
+            Input
+          </button>
+          <button
+            onClick={() => setActiveTab('output')}
+            className={`flex-1 py-1.5 text-xs font-semibold uppercase tracking-wider rounded-md transition-colors ${
+              activeTab === 'output' ? 'bg-zinc-800 text-white shadow-sm' : 'text-zinc-500 hover:text-zinc-300'
+            }`}
+          >
+            Output
+          </button>
+        </div>
+      </div>
+
       <main
-        className="flex flex-col md:flex-row flex-1 gap-4 px-4 sm:px-6 lg:px-10 pb-10 max-w-[1600px] mx-auto w-full h-[calc(100vh-200px)]"
+        className="flex flex-col md:flex-row flex-1 gap-4 px-4 sm:px-6 lg:px-10 pb-10 max-w-[1600px] mx-auto w-full h-auto md:h-[calc(100vh-200px)]"
         role="main"
       >
-        <section className="flex-1 flex flex-col" aria-label="Input section">
+        <section 
+          className={`flex-1 flex-col ${activeTab === 'input' ? 'flex' : 'hidden'} md:flex`} 
+          aria-label="Input section"
+        >
           <InputPanel
             inputText={inputText}
             setInput={setInputText}
@@ -57,7 +84,10 @@ export default function App() {
           <div className="w-px flex-1 bg-zinc-800" />
         </div>
 
-        <section className="flex-1 flex flex-col" aria-label="Output section">
+        <section 
+          className={`flex-1 flex-col ${activeTab === 'output' ? 'flex' : 'hidden'} md:flex`} 
+          aria-label="Output section"
+        >
           <OutputPanel
             outputText={outputText}
             isLoading={isLoading}
